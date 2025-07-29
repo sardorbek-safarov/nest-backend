@@ -1,0 +1,66 @@
+services:
+  nest-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: nest-backend-dev
+    ports:
+      - "8080:8080"
+    volumes:
+      # Bind mount source code for hot reload
+      - .:/usr/src/app
+      # Anonymous volume for node_modules to prevent overwriting
+      - /usr/src/app/node_modules
+      # Bind mount for Prisma schema and migrations
+      - ./prisma:/usr/src/app/prisma
+      # Named volume for application logs
+      - app_logs:/usr/src/app/logs
+      # Named volume for uploaded files (if any)
+      - app_uploads:/usr/src/app/uploads
+    environment:
+      - NODE_ENV=development
+      - PORT=8080
+      - DATABASE_URL=postgresql://nestuser:nestpass@postgres:5432/nestdb
+      - JWT_SECRET=dev-jwt-secret-key-change-in-production
+    restart: unless-stopped
+    networks:
+      - nest-network
+    depends_on:
+      - postgres
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: nest-postgres
+    environment:
+      POSTGRES_DB: nestdb
+      POSTGRES_USER: nestuser
+      POSTGRES_PASSWORD: nestpass
+    ports:
+      - "5432:5432"
+    volumes:
+      # Named volume for PostgreSQL data persistence
+      - postgres_data:/var/lib/postgresql/data
+      # Named volume for PostgreSQL logs
+      - postgres_logs:/var/log/postgresql
+    networks:
+      - nest-network
+    restart: unless-stopped
+
+networks:
+  nest-network:
+    driver: bridge
+
+volumes:
+  # PostgreSQL data persistence
+  postgres_data:
+    driver: local
+  # PostgreSQL logs
+  postgres_logs:
+    driver: local
+  # Application logs
+  app_logs:
+    driver: local
+  # Application uploads/files
+  app_uploads:
+    driver: local

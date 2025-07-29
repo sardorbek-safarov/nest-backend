@@ -1,0 +1,61 @@
+
+services:
+  nest-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nest-backend-prod
+    ports:
+      - "8080:8080"
+    volumes:
+      # Named volume for application logs in production
+      - app_logs:/usr/src/app/logs
+      # Named volume for uploaded files (if any)
+      - app_uploads:/usr/src/app/uploads
+      # Optional: Bind mount for config files
+      - ./config:/usr/src/app/config:ro
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      - DATABASE_URL=postgresql://nestuser:nestpass@postgres:5432/nestdb
+      - JWT_SECRET=production-jwt-secret-key-change-this
+    restart: always
+    networks:
+      - nest-network
+    depends_on:
+      - postgres
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-prod
+    environment:
+      POSTGRES_DB: nestdb
+      POSTGRES_USER: nestuser
+      POSTGRES_PASSWORD: nestpass
+    volumes:
+      # Persistent volume for PostgreSQL data
+      - postgres_data_prod:/var/lib/postgresql/data
+      # Bind mount for initialization scripts
+      - ./sql:/docker-entrypoint-initdb.d:ro
+      # Named volume for PostgreSQL logs
+      - postgres_logs_prod:/var/log/postgresql
+    ports:
+      - "5432:5432"
+    restart: always
+    networks:
+      - nest-network
+
+networks:
+  nest-network:
+    driver: bridge
+
+volumes:
+  postgres_data_prod:
+    driver: local
+  app_logs:
+    driver: local
+  app_uploads:
+    driver: local
+  postgres_logs_prod:
+    driver: local
