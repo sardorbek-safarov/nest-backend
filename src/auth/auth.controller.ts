@@ -83,10 +83,6 @@ export class AuthController {
   }
 
   // Keep the old endpoint for backward compatibility
-  @Post('register-json')
-  async registerJson(@Body() registerDto: RegisterDto) {
-    return this.authService.register(registerDto);
-  }
 
   @UseGuards(LocalAuthGuard)
   @Post('login')
@@ -104,14 +100,6 @@ export class AuthController {
       message: 'Login successful',
     };
   }
-
-  // Keep the old endpoint for backward compatibility
-  @UseGuards(LocalAuthGuard)
-  @Post('login-json')
-  async loginJson(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
-  }
-
   @Post('refresh')
   async refresh(
     @Req() req: ExpressRequest,
@@ -134,12 +122,6 @@ export class AuthController {
     return {
       message: 'Tokens refreshed successfully',
     };
-  }
-
-  // Keep the old endpoint for backward compatibility
-  @Post('refresh-json')
-  async refreshJson(@Body() refreshTokenDto: RefreshTokenDto) {
-    return this.authService.refreshTokens(refreshTokenDto.refresh_token);
   }
 
   @UseGuards(JwtAuthGuard)
